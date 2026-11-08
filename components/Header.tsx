@@ -2,21 +2,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 
 export default function Header() {
-  const [currentDate, setCurrentDate] = useState('');
-
-  useEffect(() => {
-    setCurrentDate(
-      new Date().toLocaleDateString('en-NG', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
-    );
-  }, []);
+  const currentDate = new Date().toLocaleDateString('en-NG', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'Africa/Lagos',
+  });
 
   return (
     <header className="border-b border-gray-200 bg-white">
@@ -29,7 +23,7 @@ export default function Header() {
         </Link>
 
         <p className="hidden text-sm text-gray-500 sm:block">
-          {currentDate || 'Loading date...'}
+          {currentDate}
         </p>
       </div>
     </header>
