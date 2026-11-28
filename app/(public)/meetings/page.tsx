@@ -1,5 +1,6 @@
 
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
 import MeetingCard from '@/components/MeetingCard';
 import MeetingSearch from '@/components/MeetingSearch';
 import Pagination from '@/components/Pagination';
@@ -7,6 +8,12 @@ import {
   getMeetings,
   getMeetingsTotalPages,
 } from '@/lib/meetings-db';
+
+export const metadata: Metadata = {
+  title: 'Sacrament Meetings | Sacrament Meeting Planner',
+  description:
+    'Browse current and previous sacrament meeting programs, including meeting details, hymns, speakers, and announcements.',
+};
 
 interface MeetingsPageProps {
   searchParams: Promise<{

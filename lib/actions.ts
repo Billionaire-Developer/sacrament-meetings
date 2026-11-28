@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
+import { auth } from '../auth';
+
 import {
   addMeeting as addMeetingToDatabase,
   updateMeeting as updateMeetingInDatabase,
@@ -17,6 +19,7 @@ export type ActionState = {
   message?: string;
 };
 
+// Meeting validation schema.
 const meetingSchema = z.object({
   date: z.string().min(1, 'Please select a meeting date.'),
 
@@ -31,6 +34,7 @@ const meetingSchema = z.object({
   openingHymnNumber: z.coerce.number().int().positive(
     'Enter a valid opening hymn number.'
   ),
+
   openingHymnTitle: z.string().trim().min(1, 'Opening hymn title is required.'),
 
   openingPrayer: z.string().trim().min(1, 'Opening prayer is required.'),
@@ -44,6 +48,7 @@ const meetingSchema = z.object({
   sacramentHymnNumber: z.coerce.number().int().positive(
     'Enter a valid sacrament hymn number.'
   ),
+
   sacramentHymnTitle: z.string().trim().min(1, 'Sacrament hymn title is required.'),
 
   speakers: z.string().optional(),
@@ -51,11 +56,13 @@ const meetingSchema = z.object({
   closingHymnNumber: z.coerce.number().int().positive(
     'Enter a valid closing hymn number.'
   ),
+
   closingHymnTitle: z.string().trim().min(1, 'Closing hymn title is required.'),
 
   closingPrayer: z.string().trim().min(1, 'Closing prayer is required.'),
 });
 
+// Extract values from the submitted form.
 function getFormValues(formData: FormData) {
   return {
     date: String(formData.get('date') ?? ''),
@@ -82,6 +89,7 @@ function getFormValues(formData: FormData) {
   };
 }
 
+// Convert validated form data into the database meeting structure.
 function convertToMeetingData(
   data: z.infer<typeof meetingSchema>
 ) {
@@ -146,6 +154,15 @@ export async function createMeeting(
   _previousState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
+  // Authentication check.
+  const session = await auth();
+
+  if (!session?.user) {
+    return {
+      message: 'You must be signed in to create a meeting.',
+    };
+  }
+
   const validatedFields = meetingSchema.safeParse(getFormValues(formData));
 
   if (!validatedFields.success) {
@@ -159,7 +176,6 @@ export async function createMeeting(
     const meetingData = convertToMeetingData(validatedFields.data);
 
     await addMeetingToDatabase(meetingData);
-
   } catch {
     return {
       message: 'Database Error: Unable to create the meeting.',
@@ -168,6 +184,7 @@ export async function createMeeting(
 
   revalidatePath('/meetings');
   revalidatePath('/admin/meetings');
+
   redirect('/admin/meetings');
 }
 
@@ -176,10 +193,21 @@ export async function updateMeeting(
   _previousState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
+  // Authentication check.
+  const session = await auth();
+
+  if (!session?.user) {
+    return {
+      message: 'You must be signed in to update a meeting.',
+    };
+  }
+
   const id = Number(formData.get('id'));
 
   if (!Number.isInteger(id) || id <= 0) {
-    return { message: 'Invalid meeting ID.' };
+    return {
+      message: 'Invalid meeting ID.',
+    };
   }
 
   const validatedFields = meetingSchema.safeParse(getFormValues(formData));
@@ -197,9 +225,10 @@ export async function updateMeeting(
     const updatedMeeting = await updateMeetingInDatabase(id, meetingData);
 
     if (!updatedMeeting) {
-      return { message: 'Meeting not found.' };
+      return {
+        message: 'Meeting not found.',
+      };
     }
-
   } catch {
     return {
       message: 'Database Error: Unable to update the meeting.',
@@ -209,11 +238,21 @@ export async function updateMeeting(
   revalidatePath('/meetings');
   revalidatePath(`/meetings/${id}`);
   revalidatePath('/admin/meetings');
+
   redirect('/admin/meetings');
 }
 
 // DELETE MEETING
 export async function deleteMeeting(formData: FormData): Promise<void> {
+  // Authentication check.
+  const session = await auth();
+
+  if (!session?.user) {
+    throw new Error(
+      'Unauthorized: You must be signed in to delete a meeting.'
+    );
+  }
+
   const id = Number(formData.get('id'));
 
   if (!Number.isInteger(id) || id <= 0) {
@@ -224,5 +263,6 @@ export async function deleteMeeting(formData: FormData): Promise<void> {
 
   revalidatePath('/meetings');
   revalidatePath('/admin/meetings');
+
   redirect('/admin/meetings');
 }

@@ -12,7 +12,6 @@ export async function GET(
   { params }: RouteContext
 ) {
   const { id } = await params;
-
   const meetingId = Number(id);
 
   if (!Number.isInteger(meetingId) || meetingId <= 0) {

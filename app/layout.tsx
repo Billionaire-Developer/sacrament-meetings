@@ -1,3 +1,4 @@
+
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
@@ -25,7 +26,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased`}>
-        <Header />
+        <Suspense
+          fallback={
+            <header className="border-b border-gray-200 bg-white px-6 py-5">
+              <div className="mx-auto max-w-7xl font-bold text-gray-900">
+                Sacrament Planner
+              </div>
+            </header>
+          }
+        >
+          <Header />
+        </Suspense>
 
         <Suspense
           fallback={

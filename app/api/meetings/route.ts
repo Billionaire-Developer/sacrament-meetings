@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMeetings } from '@/lib/meetings-db';
 
 export async function GET(request: NextRequest) {
-  const query = request.nextUrl.searchParams.get('query') ?? '';
+  const query =
+    request.nextUrl.searchParams.get('query') ?? '';
+
   const currentPage = Number(
     request.nextUrl.searchParams.get('page') ?? '1'
   );
